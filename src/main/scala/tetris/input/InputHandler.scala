@@ -8,22 +8,23 @@ import scalafx.scene.input.{KeyCode, KeyEvent}
 class InputHandler(gameState: GameState, scene: Scene) {
 
   scene.onKeyPressed = (e: KeyEvent) => {
+    val canControl = !gameState.isPaused && !gameState.isGameOver
+
     e.code match {
       // --- Movement ---
-      case KeyCode.Left | KeyCode.A => gameState.moveLeft()
-      case KeyCode.Right | KeyCode.D => gameState.moveRight()
+      case KeyCode.Left | KeyCode.A if canControl => gameState.moveLeft()
+      case KeyCode.Right | KeyCode.D if canControl => gameState.moveRight()
       
       // --- Rotation ---
-      case KeyCode.Up | KeyCode.X | KeyCode.W => gameState.rotateClockwise()
-      case KeyCode.Z | KeyCode.Control => gameState.rotateCounterClockwise()
+      case KeyCode.Up | KeyCode.X | KeyCode.W if canControl => gameState.rotateClockwise()
+      case KeyCode.Z | KeyCode.Control if canControl => gameState.rotateCounterClockwise()
 
       // --- Dropping ---
-      case KeyCode.Down | KeyCode.S => gameState.softDrop()
+      case KeyCode.Down | KeyCode.S if canControl => gameState.softDrop()
       
       // --- Game Flow ---
+      case KeyCode.P => gameState.togglePause()
       case KeyCode.R => if (gameState.isGameOver) gameState.restart()
-
-      // TODO: Add Pause (P)
 
       case _ => // Ignore other keys
     }

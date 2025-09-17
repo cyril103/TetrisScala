@@ -25,6 +25,11 @@ class GameView {
     visible = false
   }
 
+  private val pauseText = new Text("PAUSE") {
+    style = "-fx-font-size: 32px; -fx-fill: gold;"
+    visible = false
+  }
+
   val hudPane: Pane = new VBox(10, scoreText, levelText, linesText, nextPieceLabel, nextPieceCanvas) {
     padding = Insets(20)
     prefWidth = 180 // Fix the width of the HUD pane
@@ -32,7 +37,7 @@ class GameView {
     Seq(scoreText, levelText, linesText, nextPieceLabel).foreach(_.style = "-fx-font-size: 18px; -fx-fill: white;")
   }
 
-  val gamePane: Pane = new Pane { children = Seq(canvas, gameOverText) }
+  val gamePane: Pane = new Pane { children = Seq(canvas, gameOverText, pauseText) }
 
   private def renderGrid(): Unit = {
     gc.fill = Color.Black
@@ -94,11 +99,18 @@ class GameView {
         if (p.y >= 0) gc.fillRect(p.x * BlockSize, p.y * BlockSize, BlockSize - 1, BlockSize - 1)
       }
     }
-    
+
     gameOverText.visible = gameState.isGameOver
     if (gameState.isGameOver) {
       gameOverText.layoutX = (canvas.width.value - gameOverText.boundsInLocal.get.getWidth) / 2
       gameOverText.layoutY = canvas.height.value / 2
+    }
+
+    val showPause = gameState.isPaused && !gameState.isGameOver
+    pauseText.visible = showPause
+    if (showPause) {
+      pauseText.layoutX = (canvas.width.value - pauseText.boundsInLocal.get.getWidth) / 2
+      pauseText.layoutY = canvas.height.value / 2
     }
   }
 }

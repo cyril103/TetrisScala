@@ -41,7 +41,9 @@ object Main extends JFXApp3 {
     val timer = AnimationTimer(now => {
       val gravityInterval = levelToInterval(gameState.level)
 
-      if (now - lastUpdateTime > gravityInterval) {
+      if (gameState.isPaused) {
+        lastUpdateTime = now
+      } else if (now - lastUpdateTime > gravityInterval) {
         if (!gameState.isGameOver) {
           gameState.update()
           gameView.updateHud(gameState)

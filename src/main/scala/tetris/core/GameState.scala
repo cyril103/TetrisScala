@@ -12,6 +12,7 @@ class GameState {
   var level: Int = 0
   var linesCleared: Int = 0
   var isGameOver: Boolean = false
+  var isPaused: Boolean = false
 
   // The grid of landed blocks. A 2D vector of optional colors.
   private var grid: Vector[Vector[Option[Color]]] = Vector.fill(GridHeight, GridWidth)(None)
@@ -73,21 +74,29 @@ class GameState {
 
   // The main update function, called periodically to apply gravity
   def update(): Unit = {
-    val movedDown = currentPiece.copy(position = currentPiece.position.copy(y = currentPiece.position.y + 1))
-    if (isValid(movedDown)) {
-      currentPiece = movedDown
-    } else {
-      lockPiece()
-      val clearedCount = clearLines()
-      if (clearedCount > 0) {
-        updateScore(clearedCount)
+    if (!isPaused) {
+      val movedDown = currentPiece.copy(position = currentPiece.position.copy(y = currentPiece.position.y + 1))
+      if (isValid(movedDown)) {
+        currentPiece = movedDown
+      } else {
+        lockPiece()
+        val clearedCount = clearLines()
+        if (clearedCount > 0) {
+          updateScore(clearedCount)
+        }
+        spawnNewPiece()
       }
-      spawnNewPiece()
     }
   }
 
   // Public accessor for the grid for rendering
   def getGrid: Vector[Vector[Option[Color]]] = grid
+
+  def togglePause(): Unit = {
+    if (!isGameOver) {
+      isPaused = !isPaused
+    }
+  }
 
   // --- Player Actions ---
 
@@ -122,6 +131,7 @@ class GameState {
     level = 0
     linesCleared = 0
     isGameOver = false
+    isPaused = false
     randomBag = new RandomBag()
     currentPiece = Piece(Point(GridWidth / 2, 1), randomBag.nextShape(), 0)
     nextPiece = Piece(Point(0, 0), randomBag.nextShape(), 0)
