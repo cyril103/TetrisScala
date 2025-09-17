@@ -26,8 +26,6 @@ lazy val root = (project in file("."))
       "org.openjfx" % "javafx-graphics"  % javafxVersion classifier javafxClassifier,
       "org.scalatest" %% "scalatest" % "3.2.18" % Test
     ),
-    mainClass := Some("tetris.Main"),
+    Compile / mainClass := Some("tetris.Main"),
     fork := true
   )
-
-run / mainClass := Some("tetris.Main")
