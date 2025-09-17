@@ -2,6 +2,7 @@ package tetris.core
 
 import scalafx.scene.paint.Color
 import tetris.core.Constants._
+import tetris.core.HighScoreStorage
 
 class GameState {
   // Random piece generator
@@ -13,6 +14,7 @@ class GameState {
   var linesCleared: Int = 0
   var isGameOver: Boolean = false
   var isPaused: Boolean = false
+  var highScore: Long = HighScoreStorage.load()
 
   // The grid of landed blocks. A 2D vector of optional colors.
   private var grid: Vector[Vector[Option[Color]]] = Vector.fill(GridHeight, GridWidth)(None)
@@ -50,6 +52,13 @@ class GameState {
     clearedCount
   }
 
+  private def updateHighScore(): Unit = {
+    if (score > highScore) {
+      highScore = score
+      HighScoreStorage.save(highScore)
+    }
+  }
+
   private def updateScore(clearedCount: Int): Unit = {
     val points = clearedCount match {
       case 1 => 40 * (level + 1)
@@ -61,6 +70,7 @@ class GameState {
     score += points
     linesCleared += clearedCount
     level = linesCleared / 10 // Increase level every 10 lines
+    updateHighScore()
   }
 
   // Spawns a new piece at the top

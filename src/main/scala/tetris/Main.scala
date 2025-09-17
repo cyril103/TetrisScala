@@ -36,6 +36,8 @@ object Main extends JFXApp3 {
       }
     }
 
+    gameView.updateHud(gameState)
+
     var lastUpdateTime = 0L
 
     val timer = AnimationTimer(now => {

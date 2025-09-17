@@ -14,6 +14,7 @@ class GameView {
 
   // --- HUD Elements ---
   private val scoreText = new Text("Score: 0")
+  private val highScoreText = new Text("High Score: 0")
   private val levelText = new Text("Level: 0")
   private val linesText = new Text("Lines: 0")
   private val nextPieceLabel = new Text("Suivante:")
@@ -30,11 +31,11 @@ class GameView {
     visible = false
   }
 
-  val hudPane: Pane = new VBox(10, scoreText, levelText, linesText, nextPieceLabel, nextPieceCanvas) {
+  val hudPane: Pane = new VBox(10, scoreText, highScoreText, levelText, linesText, nextPieceLabel, nextPieceCanvas) {
     padding = Insets(20)
     prefWidth = 180 // Fix the width of the HUD pane
     style = "-fx-background-color: #333;"
-    Seq(scoreText, levelText, linesText, nextPieceLabel).foreach(_.style = "-fx-font-size: 18px; -fx-fill: white;")
+    Seq(scoreText, highScoreText, levelText, linesText, nextPieceLabel).foreach(_.style = "-fx-font-size: 18px; -fx-fill: white;")
   }
 
   val gamePane: Pane = new Pane { children = Seq(canvas, gameOverText, pauseText) }
@@ -83,6 +84,7 @@ class GameView {
 
   def updateHud(gameState: GameState): Unit = {
     scoreText.text = s"Score: ${gameState.score}"
+    highScoreText.text = s"High Score: ${gameState.highScore}"
     levelText.text = s"Level: ${gameState.level}"
     linesText.text = s"Lines: ${gameState.linesCleared}"
     renderNextPiece(gameState.nextPiece)
