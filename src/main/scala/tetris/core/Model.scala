@@ -7,8 +7,10 @@ case class Point(x: Int, y: Int)
 
 // Represents a falling piece
 case class Piece(position: Point, shape: Tetromino, rotation: Int) {
+  private def normalizedRotation: Int = ((rotation % 4) + 4) % 4
+
   // Returns the actual grid coordinates of the piece's blocks
-  def blocks: Vector[Point] = shape.rotations(rotation % 4).map(p => Point(p.x + position.x, p.y + position.y))
+  def blocks: Vector[Point] = shape.rotations(normalizedRotation).map(p => Point(p.x + position.x, p.y + position.y))
 }
 
 // Enum for the 7 tetromino shapes, their colors, and rotation patterns

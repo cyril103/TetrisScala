@@ -5,7 +5,7 @@ import tetris.core.Constants._
 
 class GameState {
   // Random piece generator
-  private val randomBag = new RandomBag()
+  private var randomBag = new RandomBag()
 
   // Game Stats
   var score: Long = 0
@@ -18,7 +18,7 @@ class GameState {
 
   // The current falling piece, initialized from the random bag
   var currentPiece: Piece = Piece(Point(GridWidth / 2, 1), randomBag.nextShape(), 0)
-  var nextPiece: Piece = Piece(Point(GridWidth / 2, 1), randomBag.nextShape(), 0)
+  var nextPiece: Piece = Piece(Point(0, 0), randomBag.nextShape(), 0)
 
   // Checks if a piece is in a valid position (within bounds and not colliding)
   private def isValid(piece: Piece): Boolean = {
@@ -122,8 +122,8 @@ class GameState {
     level = 0
     linesCleared = 0
     isGameOver = false
-    // Re-create the bag for a fresh start
-    val newBag = new RandomBag()
-    currentPiece = Piece(Point(GridWidth / 2, 1), newBag.nextShape(), 0)
+    randomBag = new RandomBag()
+    currentPiece = Piece(Point(GridWidth / 2, 1), randomBag.nextShape(), 0)
+    nextPiece = Piece(Point(0, 0), randomBag.nextShape(), 0)
   }
 }
