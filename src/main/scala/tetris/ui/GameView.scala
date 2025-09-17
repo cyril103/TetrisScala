@@ -112,6 +112,7 @@ class GameView {
   }
 
   private var suppressCallbacks = false
+  private var pendingVolume: Int = 100
 
   private def runWithSuppressedCallbacks[T](body: => T): T = {
     val previous = suppressCallbacks
@@ -142,12 +143,18 @@ class GameView {
 
   volumeSlider.valueProperty.onChange { (_, _, newValue) =>
     val volumeValue = clampVolume(newValue.intValue)
+    pendingVolume = volumeValue
     volumeLabel.text = s"Volume: $volumeValue%"
     if (!suppressCallbacks) {
       runWithSuppressedCallbacks {
         volumeSlider.value = volumeValue
       }
-      onVolumeChanged(volumeValue)
+    }
+  }
+
+  volumeSlider.valueChangingProperty.onChange { (_, _, isChanging) =>
+    if (!isChanging && !suppressCallbacks) {
+      onVolumeChanged(pendingVolume)
     }
   }
 
@@ -301,6 +308,7 @@ class GameView {
   }
   def setVolume(value: Int): Unit = {
     val clamped = clampVolume(value)
+    pendingVolume = clamped
     runWithSuppressedCallbacks {
       volumeSlider.value = clamped
     }

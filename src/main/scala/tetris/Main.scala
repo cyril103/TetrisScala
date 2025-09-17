@@ -36,6 +36,21 @@ object Main extends JFXApp3 {
 
     val gameState = new GameState(config)
 
+    var lastUpdateTime = 0L
+    var isRunning = false
+
+    def startGame(): Unit = {
+      if (config.resetHighScoreOnStart) {
+        HighScoreStorage.save(0L)
+        gameState.highScore = 0L
+      }
+      gameState.restart()
+      lastUpdateTime = System.nanoTime()
+      isRunning = true
+      gameView.updateHud(gameState)
+      gameView.render(gameState)
+    }
+
     val rootPane = new BorderPane {
       center = gameView.gamePane
       right = gameView.hudPane
@@ -45,13 +60,9 @@ object Main extends JFXApp3 {
       title = "TetrisScala"
       scene = new Scene {
         root = rootPane
-        new InputHandler(gameState, this)
+        new InputHandler(gameState, this, () => startGame())
       }
     }
-
-
-    var lastUpdateTime = 0L
-    var isRunning = false
 
     gameView.onStartingLevelChanged = { newLevel =>
       val clamped = math.max(0, math.min(20, newLevel))
@@ -98,11 +109,7 @@ object Main extends JFXApp3 {
     }
 
     gameView.onStartGameRequested = { () =>
-      isRunning = true
-      gameState.restart()
-      lastUpdateTime = System.nanoTime()
-      gameView.updateHud(gameState)
-      gameView.render(gameState)
+      startGame()
     }
 
     gameView.updateHud(gameState)

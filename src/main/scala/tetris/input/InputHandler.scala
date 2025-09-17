@@ -5,7 +5,7 @@ import tetris.core.GameState
 import scalafx.scene.Scene
 import scalafx.scene.input.{KeyCode, KeyEvent}
 
-class InputHandler(gameState: GameState, scene: Scene) {
+class InputHandler(gameState: GameState, scene: Scene, onRestartRequested: () => Unit) {
 
   scene.onKeyPressed = (e: KeyEvent) => {
     val canControl = !gameState.isPaused && !gameState.isGameOver
@@ -24,7 +24,7 @@ class InputHandler(gameState: GameState, scene: Scene) {
       
       // --- Game Flow ---
       case KeyCode.P => gameState.togglePause()
-      case KeyCode.R => if (gameState.isGameOver) gameState.restart()
+      case KeyCode.R => if (gameState.isGameOver) onRestartRequested()
 
       case _ => // Ignore other keys
     }
