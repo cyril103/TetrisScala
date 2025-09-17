@@ -44,7 +44,7 @@ object Main extends JFXApp3 {
       if (now - lastUpdateTime > gravityInterval) {
         if (!gameState.isGameOver) {
           gameState.update()
-          gameView.updateHud(gameState.score, gameState.level, gameState.linesCleared)
+          gameView.updateHud(gameState)
         }
         lastUpdateTime = now
       }

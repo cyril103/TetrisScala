@@ -1,7 +1,7 @@
 package tetris.ui
 
 import tetris.core.Constants._
-import tetris.core.GameState
+import tetris.core.{GameState, Piece}
 import scalafx.scene.canvas.Canvas
 import scalafx.scene.paint.Color
 import scalafx.scene.layout.{VBox, Pane}
@@ -16,21 +16,23 @@ class GameView {
   private val scoreText = new Text("Score: 0")
   private val levelText = new Text("Level: 0")
   private val linesText = new Text("Lines: 0")
+  private val nextPieceLabel = new Text("Suivante:")
+  private val nextPieceCanvas = new Canvas(4 * BlockSize, 4 * BlockSize)
+  private val nextPieceGc = nextPieceCanvas.graphicsContext2D
+
   private val gameOverText = new Text("GAME OVER") {
     style = "-fx-font-size: 40px; -fx-fill: red;"
     visible = false
   }
 
-  val hudPane: Pane = new VBox(20, scoreText, levelText, linesText) {
+  val hudPane: Pane = new VBox(10, scoreText, levelText, linesText, nextPieceLabel, nextPieceCanvas) {
     padding = Insets(20)
     prefWidth = 180 // Fix the width of the HUD pane
     style = "-fx-background-color: #333;"
-    Seq(scoreText, levelText, linesText).foreach(_.style = "-fx-font-size: 18px; -fx-fill: white;")
+    Seq(scoreText, levelText, linesText, nextPieceLabel).foreach(_.style = "-fx-font-size: 18px; -fx-fill: white;")
   }
 
-  val gamePane: Pane = new Pane {
-    children = Seq(canvas, gameOverText)
-  }
+  val gamePane: Pane = new Pane { children = Seq(canvas, gameOverText) }
 
   private def renderGrid(): Unit = {
     gc.fill = Color.Black
@@ -50,16 +52,35 @@ class GameView {
     }
   }
 
-  def updateHud(score: Long, level: Int, lines: Int): Unit = {
-    scoreText.text = s"Score: $score"
-    levelText.text = s"Level: $level"
-    linesText.text = s"Lines: $lines"
+  private def renderNextPiece(piece: Piece): Unit = {
+    nextPieceGc.fill = Color.rgb(30, 30, 30)
+    nextPieceGc.fillRect(0, 0, nextPieceCanvas.width.value, nextPieceCanvas.height.value)
+
+    val blocks = piece.shape.rotations.head // Use the base rotation
+    val minX = blocks.map(_.x).min
+    val maxX = blocks.map(_.x).max
+    val minY = blocks.map(_.y).min
+    val maxY = blocks.map(_.y).max
+
+    val pieceWidth = (maxX - minX + 1) * BlockSize
+    val pieceHeight = (maxY - minY + 1) * BlockSize
+
+    val startX = (nextPieceCanvas.width.value - pieceWidth) / 2
+    val startY = (nextPieceCanvas.height.value - pieceHeight) / 2
+
+    nextPieceGc.fill = piece.shape.color
+    for (p <- blocks) {
+        val drawX = startX - minX * BlockSize + p.x * BlockSize
+        val drawY = startY - minY * BlockSize + p.y * BlockSize
+        nextPieceGc.fillRect(drawX, drawY, BlockSize - 1, BlockSize - 1)
+    }
   }
 
-  def showGameOver(): Unit = {
-    gameOverText.visible = true
-    gameOverText.layoutX = (canvas.width.value - gameOverText.boundsInLocal.get.getWidth) / 2
-    gameOverText.layoutY = canvas.height.value / 2
+  def updateHud(gameState: GameState): Unit = {
+    scoreText.text = s"Score: ${gameState.score}"
+    levelText.text = s"Level: ${gameState.level}"
+    linesText.text = s"Lines: ${gameState.linesCleared}"
+    renderNextPiece(gameState.nextPiece)
   }
 
   def render(gameState: GameState): Unit = {
@@ -73,10 +94,9 @@ class GameView {
         if (p.y >= 0) gc.fillRect(p.x * BlockSize, p.y * BlockSize, BlockSize - 1, BlockSize - 1)
       }
     }
-    // Show or hide the game over text based on the game state
+    
     gameOverText.visible = gameState.isGameOver
     if (gameState.isGameOver) {
-      // Center the text on the canvas
       gameOverText.layoutX = (canvas.width.value - gameOverText.boundsInLocal.get.getWidth) / 2
       gameOverText.layoutY = canvas.height.value / 2
     }

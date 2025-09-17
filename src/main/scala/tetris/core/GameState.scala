@@ -18,6 +18,7 @@ class GameState {
 
   // The current falling piece, initialized from the random bag
   var currentPiece: Piece = Piece(Point(GridWidth / 2, 1), randomBag.nextShape(), 0)
+  var nextPiece: Piece = Piece(Point(GridWidth / 2, 1), randomBag.nextShape(), 0)
 
   // Checks if a piece is in a valid position (within bounds and not colliding)
   private def isValid(piece: Piece): Boolean = {
@@ -63,7 +64,8 @@ class GameState {
 
   // Spawns a new piece at the top
   private def spawnNewPiece(): Unit = {
-    currentPiece = Piece(Point(GridWidth / 2, 1), randomBag.nextShape(), 0)
+    currentPiece = nextPiece.copy(position = Point(GridWidth / 2, 1))
+    nextPiece = Piece(Point(0, 0), randomBag.nextShape(), 0) // Position doesn't matter here
     if (!isValid(currentPiece)) {
       isGameOver = true
     }
