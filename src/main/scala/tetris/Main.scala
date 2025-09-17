@@ -7,6 +7,8 @@ import tetris.ui.GameView
 import tetris.core.Constants._
 import scalafx.scene.layout.BorderPane
 import tetris.core.GameState
+import tetris.core.ConfigStorage
+import tetris.core.HighScoreStorage
 import tetris.input.InputHandler
 
 object Main extends JFXApp3 {
@@ -20,8 +22,16 @@ object Main extends JFXApp3 {
   }
 
   override def start(): Unit = {
+    var config = ConfigStorage.load()
+
+    if (config.resetHighScoreOnStart) {
+      HighScoreStorage.save(0L)
+    }
+
     val gameView = new GameView()
-    val gameState = new GameState()
+    gameView.setStartingLevel(config.startingLevel)
+
+    val gameState = new GameState(config)
 
     val rootPane = new BorderPane {
       center = gameView.gamePane
@@ -36,9 +46,23 @@ object Main extends JFXApp3 {
       }
     }
 
-    gameView.updateHud(gameState)
 
     var lastUpdateTime = 0L
+
+    gameView.onStartingLevelChanged = { newLevel =>
+      val clamped = math.max(0, math.min(20, newLevel))
+      if (clamped != config.startingLevel) {
+        config = config.copy(startingLevel = clamped)
+        ConfigStorage.save(config)
+      }
+      gameView.setStartingLevel(clamped)
+      gameState.updateStartingLevel(clamped)
+      lastUpdateTime = System.nanoTime()
+      gameView.updateHud(gameState)
+      gameView.render(gameState)
+    }
+
+    gameView.updateHud(gameState)
 
     val timer = AnimationTimer(now => {
       val gravityInterval = levelToInterval(gameState.level)

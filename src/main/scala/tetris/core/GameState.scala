@@ -3,14 +3,18 @@ package tetris.core
 import scalafx.scene.paint.Color
 import tetris.core.Constants._
 import tetris.core.HighScoreStorage
+import tetris.core.ConfigStorage
 
-class GameState {
+class GameState(config: GameConfig = ConfigStorage.load()) {
   // Random piece generator
   private var randomBag = new RandomBag()
 
+  private def clampStartingLevel(level: Int): Int = math.max(0, math.min(20, level))
+  private var startingLevelBase: Int = clampStartingLevel(config.startingLevel)
+
   // Game Stats
   var score: Long = 0
-  var level: Int = 0
+  var level: Int = startingLevelBase
   var linesCleared: Int = 0
   var isGameOver: Boolean = false
   var isPaused: Boolean = false
@@ -69,7 +73,7 @@ class GameState {
     }
     score += points
     linesCleared += clearedCount
-    level = linesCleared / 10 // Increase level every 10 lines
+    level = startingLevelBase + (linesCleared / 10) // Increase level every 10 lines
     updateHighScore()
   }
 
@@ -135,10 +139,18 @@ class GameState {
     update()
   }
 
+  def updateStartingLevel(newLevel: Int): Unit = {
+    val clamped = clampStartingLevel(newLevel)
+    if (clamped != startingLevelBase) {
+      startingLevelBase = clamped
+      restart()
+    }
+  }
+
   def restart(): Unit = {
     grid = Vector.fill(GridHeight, GridWidth)(None)
     score = 0
-    level = 0
+    level = startingLevelBase
     linesCleared = 0
     isGameOver = false
     isPaused = false

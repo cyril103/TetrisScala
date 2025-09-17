@@ -1,15 +1,23 @@
 package tetris.ui
 
 import tetris.core.Constants._
+import scalafx.Includes._
 import tetris.core.{GameState, Piece}
 import scalafx.scene.canvas.Canvas
 import scalafx.scene.paint.Color
-import scalafx.scene.layout.{VBox, Pane}
+import scalafx.scene.layout.{VBox, Pane, HBox}
 import scalafx.scene.text.Text
 import scalafx.geometry.Insets
+import scalafx.geometry.Pos
+import scalafx.scene.control.{Button, Label}
+import scalafx.beans.property.IntegerProperty
 
 class GameView {
+  val startingLevelDisplay: IntegerProperty = IntegerProperty(0)
+  var onStartingLevelChanged: Int => Unit = _ => ()
+
   val canvas = new Canvas(GridWidth * BlockSize, GridHeight * BlockSize)
+  canvas.focusTraversable = false
   private val gc = canvas.graphicsContext2D
 
   // --- HUD Elements ---
@@ -31,7 +39,53 @@ class GameView {
     visible = false
   }
 
-  val hudPane: Pane = new VBox(10, scoreText, highScoreText, levelText, linesText, nextPieceLabel, nextPieceCanvas) {
+  private val startingLevelLabel = new Label("Starting level: 0") {
+    style = "-fx-text-fill: white; -fx-font-size: 16px;"
+  }
+
+  private val decreaseLevelButton = new Button("-") {
+    style = "-fx-font-size: 18px; -fx-pref-width: 40px;"
+    focusTraversable = false
+  }
+
+  private val increaseLevelButton = new Button("+") {
+    style = "-fx-font-size: 18px; -fx-pref-width: 40px;"
+    focusTraversable = false
+  }
+
+  private val startingLevelButtons = new HBox(6, decreaseLevelButton, increaseLevelButton) {
+    alignment = Pos.CenterLeft
+  }
+
+  private val startingLevelControls = new VBox(4, startingLevelLabel, startingLevelButtons) {
+    spacing = 4
+  }
+
+  private def clampStartingLevel(level: Int): Int = math.max(0, math.min(20, level))
+
+  private def refreshStartingLevelControls(level: Int): Unit = {
+    startingLevelLabel.text = s"Starting level: $level"
+    decreaseLevelButton.disable = level <= 0
+    increaseLevelButton.disable = level >= 20
+  }
+
+  decreaseLevelButton.onAction = _ => adjustStartingLevel(-1)
+  increaseLevelButton.onAction = _ => adjustStartingLevel(1)
+
+  private def adjustStartingLevel(delta: Int): Unit = {
+    val newLevel = clampStartingLevel(startingLevelDisplay.value + delta)
+    if (newLevel != startingLevelDisplay.value) {
+      onStartingLevelChanged(newLevel)
+    }
+  }
+
+  startingLevelDisplay.onChange { (_, _, newValue) =>
+    refreshStartingLevelControls(newValue.intValue)
+  }
+
+  refreshStartingLevelControls(startingLevelDisplay.value)
+
+  val hudPane: Pane = new VBox(10, scoreText, highScoreText, levelText, linesText, startingLevelControls, nextPieceLabel, nextPieceCanvas) {
     padding = Insets(20)
     prefWidth = 180 // Fix the width of the HUD pane
     style = "-fx-background-color: #333;"
@@ -114,5 +168,10 @@ class GameView {
       pauseText.layoutX = (canvas.width.value - pauseText.boundsInLocal.get.getWidth) / 2
       pauseText.layoutY = canvas.height.value / 2
     }
+  }
+  def setStartingLevel(level: Int): Unit = {
+    val clamped = clampStartingLevel(level)
+    startingLevelDisplay.value = clamped
+    refreshStartingLevelControls(clamped)
   }
 }

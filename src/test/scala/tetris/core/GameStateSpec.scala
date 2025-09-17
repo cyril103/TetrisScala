@@ -4,6 +4,7 @@ import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
 import scalafx.scene.paint.Color
 import tetris.core.Constants._
+import tetris.core.GameConfig
 
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
@@ -29,7 +30,7 @@ class GameStateSpec extends AnyFunSuite with Matchers {
 
   test("update moves the active piece down by one row when unobstructed") {
     withTempHighScore() {
-      val state = new GameState()
+      val state = new GameState(GameConfig())
       state.currentPiece = Piece(Point(GridWidth / 2, 1), Tetromino.I, rotation = 0)
 
       val initialY = state.currentPiece.position.y
@@ -41,7 +42,7 @@ class GameStateSpec extends AnyFunSuite with Matchers {
 
   test("update does nothing while the game is paused") {
     withTempHighScore() {
-      val state = new GameState()
+      val state = new GameState(GameConfig())
       state.isPaused = true
       val initialPiece = state.currentPiece
 
@@ -53,7 +54,7 @@ class GameStateSpec extends AnyFunSuite with Matchers {
 
   test("softDrop applies one gravity tick when not paused") {
     withTempHighScore() {
-      val state = new GameState()
+      val state = new GameState(GameConfig())
       val initialY = state.currentPiece.position.y
 
       state.softDrop()
@@ -64,7 +65,7 @@ class GameStateSpec extends AnyFunSuite with Matchers {
 
   test("togglePause flips the pause flag only when game is running") {
     withTempHighScore() {
-      val state = new GameState()
+      val state = new GameState(GameConfig())
       state.togglePause()
       state.isPaused shouldBe true
 
@@ -76,14 +77,40 @@ class GameStateSpec extends AnyFunSuite with Matchers {
 
   test("high score loads the persisted value") {
     withTempHighScore(initial = Some(900L)) {
-      val state = new GameState()
+      val state = new GameState(GameConfig())
       state.highScore shouldEqual 900L
+    }
+  }
+
+  test("starting level from config is applied on start and restart") {
+    withTempHighScore() {
+      val cfg = GameConfig(startingLevel = 3)
+      val state = new GameState(cfg)
+
+      state.level shouldEqual 3
+      state.restart()
+      state.level shouldEqual 3
+    }
+  }
+
+  test("updateStartingLevel restarts the game with the new base level") {
+    withTempHighScore() {
+      val state = new GameState(GameConfig(startingLevel = 2))
+      state.score = 400
+      state.linesCleared = 6
+
+      state.updateStartingLevel(5)
+
+      state.level shouldEqual 5
+      state.linesCleared shouldEqual 0
+      state.score shouldEqual 0
+      state.isGameOver shouldBe false
     }
   }
 
   test("line clear awards points, updates high score, and spawns the next piece") {
     withTempHighScore() {
-      val state = new GameState()
+      val state = new GameState(GameConfig())
       val color = Color.Coral
       val emptyRow = Vector.fill(GridWidth)(Option.empty[Color])
       val nearlyFullBottom = Vector.tabulate(GridWidth) { x =>
@@ -113,7 +140,7 @@ class GameStateSpec extends AnyFunSuite with Matchers {
 
   test("restart resets the full game state but keeps high score") {
     withTempHighScore(initial = Some(500L)) {
-      val state = new GameState()
+      val state = new GameState(GameConfig())
       state.score = 1234
       state.level = 3
       state.linesCleared = 12
