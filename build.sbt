@@ -23,7 +23,8 @@ lazy val root = (project in file("."))
     libraryDependencies ++= Seq(
       "org.openjfx" % "javafx-base"    % javafxVersion classifier javafxClassifier,
       "org.openjfx" % "javafx-controls"  % javafxVersion classifier javafxClassifier,
-      "org.openjfx" % "javafx-graphics"  % javafxVersion classifier javafxClassifier
+      "org.openjfx" % "javafx-graphics"  % javafxVersion classifier javafxClassifier,
+      "org.scalatest" %% "scalatest" % "3.2.18" % Test
     ),
     mainClass := Some("tetris.Main"),
     fork := true
