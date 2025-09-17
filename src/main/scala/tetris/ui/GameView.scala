@@ -19,6 +19,7 @@ class GameView {
   var onDarkModeChanged: Boolean => Unit = _ => ()
   var onResetHighScoreToggleChanged: Boolean => Unit = _ => ()
   var onResetHighScoreRequested: () => Unit = () => ()
+  var onStartGameRequested: () => Unit = () => ()
 
   val canvas = new Canvas(GridWidth * BlockSize, GridHeight * BlockSize)
   canvas.focusTraversable = false
@@ -89,12 +90,18 @@ class GameView {
     style = "-fx-text-fill: white; -fx-font-size: 16px;"
   }
 
+  private val startGameButton = new Button("Start Game") {
+    style = "-fx-font-size: 16px;"
+    focusTraversable = false
+  }
+
   private val resetHighScoreButton = new Button("Reset High Score now") {
     style = "-fx-font-size: 16px;"
     focusTraversable = false
   }
 
   private val optionsBox = new VBox(6,
+    startGameButton,
     volumeLabel,
     volumeSlider,
     darkModeCheck,
@@ -117,7 +124,7 @@ class GameView {
 
   private def refocusGameCanvas(): Unit = canvas.requestFocus()
 
-  Seq(decreaseLevelButton, increaseLevelButton, resetHighScoreButton).foreach { button =>
+  Seq(decreaseLevelButton, increaseLevelButton, resetHighScoreButton, startGameButton).foreach { button =>
     button.onMousePressed = _ => refocusGameCanvas()
     button.onMouseReleased = _ => refocusGameCanvas()
     button.onKeyReleased = _ => refocusGameCanvas()
@@ -156,6 +163,7 @@ class GameView {
     }
   }
 
+  startGameButton.onAction = _ => onStartGameRequested()
   resetHighScoreButton.onAction = _ => onResetHighScoreRequested()
 
   private var boardBackgroundColor: Color = Color.Black
@@ -175,6 +183,7 @@ class GameView {
     volumeLabel.style = s"-fx-text-fill: $textFill; -fx-font-size: 16px;"
     darkModeCheck.style = s"-fx-text-fill: $textFill; -fx-font-size: 16px;"
     resetHighScoreOnStartCheck.style = s"-fx-text-fill: $textFill; -fx-font-size: 16px;"
+    startGameButton.style = s"-fx-font-size: 16px; -fx-text-fill: $textFill;"
     resetHighScoreButton.style = s"-fx-font-size: 16px; -fx-text-fill: $textFill;"
 
     val hudBackground = if (dark) "#333333" else "#f2f2f2"

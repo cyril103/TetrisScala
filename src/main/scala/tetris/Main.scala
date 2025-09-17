@@ -51,6 +51,7 @@ object Main extends JFXApp3 {
 
 
     var lastUpdateTime = 0L
+    var isRunning = false
 
     gameView.onStartingLevelChanged = { newLevel =>
       val clamped = math.max(0, math.min(20, newLevel))
@@ -96,12 +97,20 @@ object Main extends JFXApp3 {
       gameView.updateHud(gameState)
     }
 
+    gameView.onStartGameRequested = { () =>
+      isRunning = true
+      gameState.restart()
+      lastUpdateTime = System.nanoTime()
+      gameView.updateHud(gameState)
+      gameView.render(gameState)
+    }
+
     gameView.updateHud(gameState)
 
     val timer = AnimationTimer(now => {
       val gravityInterval = levelToInterval(gameState.level)
 
-      if (gameState.isPaused) {
+      if (!isRunning || gameState.isPaused) {
         lastUpdateTime = now
       } else if (now - lastUpdateTime > gravityInterval) {
         if (!gameState.isGameOver) {
@@ -114,6 +123,7 @@ object Main extends JFXApp3 {
       gameView.render(gameState)
 
       if (gameState.isGameOver) {
+        isRunning = false
         // The text is now shown/hidden automatically by the render method
         // timer.stop() // We keep the timer running to listen for the restart key
       }
