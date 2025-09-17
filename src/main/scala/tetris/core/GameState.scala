@@ -4,6 +4,7 @@ import scalafx.scene.paint.Color
 import tetris.core.Constants._
 import tetris.core.HighScoreStorage
 import tetris.core.ConfigStorage
+import tetris.core.GameConfig
 
 class GameState(config: GameConfig = ConfigStorage.load()) {
   // Random piece generator

@@ -29,12 +29,14 @@ class ConfigStorageSpec extends AnyFunSuite with Matchers {
   test("load parses valid properties") {
     withTempPath { path =>
       val content = """startingLevel=4
+volume=75
+darkMode=false
 resetHighScoreOnStart=true
 """
       Files.writeString(path, content, StandardCharsets.UTF_8)
 
       ConfigStorage.withCustomPath(path) {
-        ConfigStorage.load() shouldEqual GameConfig(startingLevel = 4, resetHighScoreOnStart = true)
+        ConfigStorage.load() shouldEqual GameConfig(startingLevel = 4, volume = 75, darkMode = false, resetHighScoreOnStart = true)
       }
     }
   }
@@ -42,12 +44,14 @@ resetHighScoreOnStart=true
   test("load ignores invalid values and falls back to defaults") {
     withTempPath { path =>
       val content = """startingLevel=not-a-number
-resetHighScoreOnStart=maybe
+volume=500
+darkMode=maybe
+resetHighScoreOnStart=perhaps
 """
       Files.writeString(path, content, StandardCharsets.UTF_8)
 
       ConfigStorage.withCustomPath(path) {
-        ConfigStorage.load() shouldEqual GameConfig()
+        ConfigStorage.load() shouldEqual GameConfig(volume = 100)
       }
     }
   }
@@ -55,11 +59,13 @@ resetHighScoreOnStart=maybe
   test("save writes the configuration to disk") {
     withTempPath { path =>
       ConfigStorage.withCustomPath(path) {
-        val config = GameConfig(startingLevel = 7, resetHighScoreOnStart = true)
+        val config = GameConfig(startingLevel = 7, volume = 60, darkMode = false, resetHighScoreOnStart = true)
         ConfigStorage.save(config)
 
         val raw = Files.readString(path, StandardCharsets.UTF_8)
         raw.contains("startingLevel=7") shouldBe true
+        raw.contains("volume=60") shouldBe true
+        raw.contains("darkMode=false") shouldBe true
         raw.contains("resetHighScoreOnStart=true") shouldBe true
       }
     }

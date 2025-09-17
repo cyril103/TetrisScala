@@ -30,6 +30,9 @@ object Main extends JFXApp3 {
 
     val gameView = new GameView()
     gameView.setStartingLevel(config.startingLevel)
+    gameView.setVolume(config.volume)
+    gameView.setDarkMode(config.darkMode)
+    gameView.setResetHighScoreOnStart(config.resetHighScoreOnStart)
 
     val gameState = new GameState(config)
 
@@ -60,6 +63,37 @@ object Main extends JFXApp3 {
       lastUpdateTime = System.nanoTime()
       gameView.updateHud(gameState)
       gameView.render(gameState)
+    }
+
+    gameView.onVolumeChanged = { volume =>
+      val clamped = math.max(0, math.min(100, volume))
+      if (clamped != config.volume) {
+        config = config.copy(volume = clamped)
+        ConfigStorage.save(config)
+      }
+      gameView.setVolume(clamped)
+    }
+
+    gameView.onDarkModeChanged = { enabled =>
+      if (enabled != config.darkMode) {
+        config = config.copy(darkMode = enabled)
+        ConfigStorage.save(config)
+      }
+      gameView.setDarkMode(enabled)
+    }
+
+    gameView.onResetHighScoreToggleChanged = { enabled =>
+      if (enabled != config.resetHighScoreOnStart) {
+        config = config.copy(resetHighScoreOnStart = enabled)
+        ConfigStorage.save(config)
+      }
+      gameView.setResetHighScoreOnStart(enabled)
+    }
+
+    gameView.onResetHighScoreRequested = { () =>
+      HighScoreStorage.save(0L)
+      gameState.highScore = 0L
+      gameView.updateHud(gameState)
     }
 
     gameView.updateHud(gameState)

@@ -9,12 +9,16 @@ import scalafx.scene.layout.{VBox, Pane, HBox}
 import scalafx.scene.text.Text
 import scalafx.geometry.Insets
 import scalafx.geometry.Pos
-import scalafx.scene.control.{Button, Label}
+import scalafx.scene.control.{Button, Label, Slider, CheckBox}
 import scalafx.beans.property.IntegerProperty
 
 class GameView {
   val startingLevelDisplay: IntegerProperty = IntegerProperty(0)
   var onStartingLevelChanged: Int => Unit = _ => ()
+  var onVolumeChanged: Int => Unit = _ => ()
+  var onDarkModeChanged: Boolean => Unit = _ => ()
+  var onResetHighScoreToggleChanged: Boolean => Unit = _ => ()
+  var onResetHighScoreRequested: () => Unit = () => ()
 
   val canvas = new Canvas(GridWidth * BlockSize, GridHeight * BlockSize)
   canvas.focusTraversable = false
@@ -61,6 +65,122 @@ class GameView {
     spacing = 4
   }
 
+  private val volumeLabel = new Label("Volume: 100%") {
+    style = "-fx-text-fill: white; -fx-font-size: 16px;"
+  }
+
+  private val volumeSlider = new Slider(0, 100, 100) {
+    blockIncrement = 5
+    majorTickUnit = 25
+    showTickLabels = false
+    showTickMarks = false
+    maxWidth = 160
+    focusTraversable = false
+  }
+
+  private val darkModeCheck = new CheckBox("Dark mode") {
+    selected = true
+    focusTraversable = false
+    style = "-fx-text-fill: white; -fx-font-size: 16px;"
+  }
+
+  private val resetHighScoreOnStartCheck = new CheckBox("Reset high score on start") {
+    focusTraversable = false
+    style = "-fx-text-fill: white; -fx-font-size: 16px;"
+  }
+
+  private val resetHighScoreButton = new Button("Reset High Score now") {
+    style = "-fx-font-size: 16px;"
+    focusTraversable = false
+  }
+
+  private val optionsBox = new VBox(6,
+    volumeLabel,
+    volumeSlider,
+    darkModeCheck,
+    resetHighScoreOnStartCheck,
+    resetHighScoreButton
+  ) {
+    spacing = 6
+  }
+
+  private var suppressCallbacks = false
+
+  private def runWithSuppressedCallbacks[T](body: => T): T = {
+    val previous = suppressCallbacks
+    suppressCallbacks = true
+    try body
+    finally suppressCallbacks = previous
+  }
+
+  private def clampVolume(value: Int): Int = math.max(0, math.min(100, value))
+
+  private def refocusGameCanvas(): Unit = canvas.requestFocus()
+
+  Seq(decreaseLevelButton, increaseLevelButton, resetHighScoreButton).foreach { button =>
+    button.onMousePressed = _ => refocusGameCanvas()
+    button.onMouseReleased = _ => refocusGameCanvas()
+    button.onKeyReleased = _ => refocusGameCanvas()
+  }
+
+  Seq(darkModeCheck, resetHighScoreOnStartCheck).foreach { check =>
+    check.onMousePressed = _ => refocusGameCanvas()
+    check.onMouseReleased = _ => refocusGameCanvas()
+    check.onKeyReleased = _ => refocusGameCanvas()
+  }
+
+  volumeSlider.onMousePressed = _ => refocusGameCanvas()
+  volumeSlider.onMouseReleased = _ => refocusGameCanvas()
+  volumeSlider.onKeyReleased = _ => refocusGameCanvas()
+
+  volumeSlider.valueProperty.onChange { (_, _, newValue) =>
+    val volumeValue = clampVolume(newValue.intValue)
+    volumeLabel.text = s"Volume: $volumeValue%"
+    if (!suppressCallbacks) {
+      runWithSuppressedCallbacks {
+        volumeSlider.value = volumeValue
+      }
+      onVolumeChanged(volumeValue)
+    }
+  }
+
+  darkModeCheck.selectedProperty.onChange { (_, _, newValue) =>
+    if (!suppressCallbacks) {
+      onDarkModeChanged(newValue)
+    }
+  }
+
+  resetHighScoreOnStartCheck.selectedProperty.onChange { (_, _, newValue) =>
+    if (!suppressCallbacks) {
+      onResetHighScoreToggleChanged(newValue)
+    }
+  }
+
+  resetHighScoreButton.onAction = _ => onResetHighScoreRequested()
+
+  private var boardBackgroundColor: Color = Color.Black
+  private var boardGridColor: Color = Color.rgb(50, 50, 50)
+  private var isDarkMode: Boolean = true
+
+  private val hudTexts = Seq(scoreText, highScoreText, levelText, linesText, nextPieceLabel)
+
+  private def applyTheme(dark: Boolean): Unit = {
+    isDarkMode = dark
+    boardBackgroundColor = if (dark) Color.Black else Color.White
+    boardGridColor = if (dark) Color.rgb(50, 50, 50) else Color.rgb(160, 160, 160)
+
+    val textFill = if (dark) "white" else "#111111"
+    hudTexts.foreach(_.style = s"-fx-font-size: 18px; -fx-fill: $textFill;")
+    startingLevelLabel.style = s"-fx-text-fill: $textFill; -fx-font-size: 16px;"
+    volumeLabel.style = s"-fx-text-fill: $textFill; -fx-font-size: 16px;"
+    darkModeCheck.style = s"-fx-text-fill: $textFill; -fx-font-size: 16px;"
+    resetHighScoreOnStartCheck.style = s"-fx-text-fill: $textFill; -fx-font-size: 16px;"
+    resetHighScoreButton.style = s"-fx-font-size: 16px; -fx-text-fill: $textFill;"
+
+    val hudBackground = if (dark) "#333333" else "#f2f2f2"
+    hudPane.style = s"-fx-background-color: $hudBackground;"
+  }
+
   private def clampStartingLevel(level: Int): Int = math.max(0, math.min(20, level))
 
   private def refreshStartingLevelControls(level: Int): Unit = {
@@ -85,19 +205,19 @@ class GameView {
 
   refreshStartingLevelControls(startingLevelDisplay.value)
 
-  val hudPane: Pane = new VBox(10, scoreText, highScoreText, levelText, linesText, startingLevelControls, nextPieceLabel, nextPieceCanvas) {
+  val hudPane: Pane = new VBox(10, scoreText, highScoreText, levelText, linesText, startingLevelControls, optionsBox, nextPieceLabel, nextPieceCanvas) {
     padding = Insets(20)
     prefWidth = 180 // Fix the width of the HUD pane
-    style = "-fx-background-color: #333;"
-    Seq(scoreText, highScoreText, levelText, linesText, nextPieceLabel).foreach(_.style = "-fx-font-size: 18px; -fx-fill: white;")
   }
+
+  applyTheme(isDarkMode)
 
   val gamePane: Pane = new Pane { children = Seq(canvas, gameOverText, pauseText) }
 
   private def renderGrid(): Unit = {
-    gc.fill = Color.Black
+    gc.fill = boardBackgroundColor
     gc.fillRect(0, 0, canvas.width.value, canvas.height.value)
-    gc.stroke = Color.rgb(50, 50, 50)
+    gc.stroke = boardGridColor
     gc.lineWidth = 1
     for (x <- 0 to GridWidth) gc.strokeLine(x * BlockSize, 0, x * BlockSize, canvas.height.value)
     for (y <- 0 to GridHeight) gc.strokeLine(0, y * BlockSize, canvas.width.value, y * BlockSize)
@@ -113,7 +233,8 @@ class GameView {
   }
 
   private def renderNextPiece(piece: Piece): Unit = {
-    nextPieceGc.fill = Color.rgb(30, 30, 30)
+    val previewBackground = if (isDarkMode) Color.rgb(30, 30, 30) else Color.rgb(220, 220, 220)
+    nextPieceGc.fill = previewBackground
     nextPieceGc.fillRect(0, 0, nextPieceCanvas.width.value, nextPieceCanvas.height.value)
 
     val blocks = piece.shape.rotations.head // Use the base rotation
@@ -169,9 +290,32 @@ class GameView {
       pauseText.layoutY = canvas.height.value / 2
     }
   }
+  def setVolume(value: Int): Unit = {
+    val clamped = clampVolume(value)
+    runWithSuppressedCallbacks {
+      volumeSlider.value = clamped
+    }
+    volumeLabel.text = s"Volume: $clamped%"
+  }
+
+  def setDarkMode(enabled: Boolean): Unit = {
+    runWithSuppressedCallbacks {
+      darkModeCheck.selected = enabled
+    }
+    applyTheme(enabled)
+  }
+
+  def setResetHighScoreOnStart(enabled: Boolean): Unit = {
+    runWithSuppressedCallbacks {
+      resetHighScoreOnStartCheck.selected = enabled
+    }
+  }
+
   def setStartingLevel(level: Int): Unit = {
     val clamped = clampStartingLevel(level)
-    startingLevelDisplay.value = clamped
+    runWithSuppressedCallbacks {
+      startingLevelDisplay.value = clamped
+    }
     refreshStartingLevelControls(clamped)
   }
 }
