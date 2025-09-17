@@ -1,0 +1,24 @@
+# Fichiers et dossiers générés par sbt
+/target/
+/project/project/
+/project/target/
+
+# Fichiers de logs
+*.log
+
+# Fichiers spécifiques aux IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.classpath
+.project
+.settings/
+
+# Fichiers spécifiques à l'OS
+.DS_Store
+Thumbs.db
+
+# Fichier de contexte pour Gemini
+gemini.md
