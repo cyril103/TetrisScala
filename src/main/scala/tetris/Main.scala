@@ -67,6 +67,7 @@ object Main extends JFXApp3 {
       isRunning = false
       gameState.isPaused = true
       mainScene.root = startScreen.rootPane
+      startScreen.updateStats(gameState.highScore, gameState.score, gameState.linesCleared)
       startScreen.requestInitialFocus()
     }
 
@@ -151,6 +152,7 @@ object Main extends JFXApp3 {
       HighScoreStorage.save(0L)
       gameState.highScore = 0L
       gameView.updateHud(gameState)
+      startScreen.updateStats(gameState.highScore, gameState.score, gameState.linesCleared)
     }
 
     gameView.onResetHighScoreRequested = () => resetHighScoreAction()
@@ -182,6 +184,7 @@ object Main extends JFXApp3 {
 
       if (gameState.isGameOver) {
         isRunning = false
+        startScreen.updateStats(gameState.highScore, gameState.score, gameState.linesCleared)
       }
     })
 

@@ -117,6 +117,29 @@ class StartScreenView {
     padding = Insets(10, 0, 4, 0)
   }
 
+  private val statsHeader = new Label("Vos statistiques") {
+    font = Font.font("Arial", FontWeight.Bold, 18)
+    textFill = Color.web("#f0f0f0")
+    padding = Insets(10, 0, 4, 0)
+  }
+
+  private val bestScoreLabel = new Label("High score : 0") {
+    style = "-fx-text-fill: #f0f0f0; -fx-font-size: 16px;"
+  }
+
+  private val lastScoreLabel = new Label("Dernier score : 0") {
+    style = "-fx-text-fill: #f0f0f0; -fx-font-size: 16px;"
+  }
+
+  private val lastLinesLabel = new Label("Dernieres lignes : 0") {
+    style = "-fx-text-fill: #f0f0f0; -fx-font-size: 16px;"
+  }
+
+  private val statsBox = new VBox(6, statsHeader, bestScoreLabel, lastScoreLabel, lastLinesLabel) {
+    padding = Insets(12, 16, 12, 16)
+    style = "-fx-background-color: rgba(0, 0, 0, 0.35); -fx-background-radius: 10px;"
+  }
+
   private def wrapOption(label: String, control: Node): Node = {
     val description = new Label(label) {
       style = "-fx-text-fill: #f0f0f0; -fx-font-size: 16px;"
@@ -138,7 +161,8 @@ class StartScreenView {
     },
     darkModeCheck,
     resetHighScoreCheck,
-    resetHighScoreButton
+    resetHighScoreButton,
+    statsBox
   ) {
     padding = Insets(16, 20, 16, 20)
     style = "-fx-background-color: rgba(0, 0, 0, 0.35); -fx-background-radius: 10px;"
@@ -213,7 +237,12 @@ class StartScreenView {
     titleLabel.textFill = if (isDarkMode) Color.web("#f7f7f7") else Color.web("#1b1b1b")
     subtitleLabel.textFill = Color.web(secondary)
     optionsHeader.textFill = Color.web(textColor)
+    statsHeader.textFill = Color.web(textColor)
     optionsBox.style = if (isDarkMode)
+      "-fx-background-color: rgba(0, 0, 0, 0.35); -fx-background-radius: 10px;"
+    else
+      "-fx-background-color: rgba(255, 255, 255, 0.80); -fx-background-radius: 10px;"
+    statsBox.style = if (isDarkMode)
       "-fx-background-color: rgba(0, 0, 0, 0.35); -fx-background-radius: 10px;"
     else
       "-fx-background-color: rgba(255, 255, 255, 0.80); -fx-background-radius: 10px;"
@@ -226,5 +255,14 @@ class StartScreenView {
     resetHighScoreCheck.style = s"-fx-text-fill: $textColor; -fx-font-size: 14px;"
     volumeValueLabel.style = s"-fx-text-fill: $textColor; -fx-font-size: 16px;"
     levelValueLabel.style = s"-fx-text-fill: $textColor; -fx-font-size: 18px; -fx-min-width: 40px; -fx-alignment: center;"
+    bestScoreLabel.style = s"-fx-text-fill: $textColor; -fx-font-size: 16px;"
+    lastScoreLabel.style = s"-fx-text-fill: $textColor; -fx-font-size: 16px;"
+    lastLinesLabel.style = s"-fx-text-fill: $textColor; -fx-font-size: 16px;"
+  }
+
+  def updateStats(bestScore: Long, lastScore: Long, lastLines: Int): Unit = {
+    bestScoreLabel.text = s"High score : $bestScore"
+    lastScoreLabel.text = s"Dernier score : $lastScore"
+    lastLinesLabel.text = s"Dernieres lignes : $lastLines"
   }
 }
