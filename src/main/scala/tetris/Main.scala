@@ -5,9 +5,7 @@ import scalafx.scene.Scene
 import scalafx.animation.AnimationTimer
 import tetris.ui.{GameView, StartScreenView}
 import scalafx.scene.layout.BorderPane
-import tetris.core.GameState
-import tetris.core.ConfigStorage
-import tetris.core.HighScoreStorage
+import tetris.core.{GameState, ConfigStorage, HighScoreStorage, StatsStorage, LastStats}
 import tetris.input.InputHandler
 
 object Main extends JFXApp3 {
@@ -48,6 +46,8 @@ object Main extends JFXApp3 {
 
     val gameState = new GameState(config)
 
+    var lastStats: LastStats = StatsStorage.load()
+
     var lastUpdateTime = 0L
     var isRunning = false
 
@@ -67,7 +67,7 @@ object Main extends JFXApp3 {
       isRunning = false
       gameState.isPaused = true
       mainScene.root = startScreen.rootPane
-      startScreen.updateStats(gameState.highScore, gameState.score, gameState.linesCleared)
+      startScreen.updateStats(gameState.highScore, lastStats.score, lastStats.lines)
       startScreen.requestInitialFocus()
     }
 
@@ -152,7 +152,7 @@ object Main extends JFXApp3 {
       HighScoreStorage.save(0L)
       gameState.highScore = 0L
       gameView.updateHud(gameState)
-      startScreen.updateStats(gameState.highScore, gameState.score, gameState.linesCleared)
+      startScreen.updateStats(gameState.highScore, lastStats.score, lastStats.lines)
     }
 
     gameView.onResetHighScoreRequested = () => resetHighScoreAction()
@@ -184,7 +184,9 @@ object Main extends JFXApp3 {
 
       if (gameState.isGameOver) {
         isRunning = false
-        startScreen.updateStats(gameState.highScore, gameState.score, gameState.linesCleared)
+        lastStats = LastStats(gameState.score, gameState.linesCleared)
+        StatsStorage.save(lastStats)
+        startScreen.updateStats(gameState.highScore, lastStats.score, lastStats.lines)
       }
     })
 
