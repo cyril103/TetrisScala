@@ -176,6 +176,7 @@ class GameView {
   private var boardBackgroundColor: Color = Color.Black
   private var boardGridColor: Color = Color.rgb(50, 50, 50)
   private var isDarkMode: Boolean = true
+  private val lineClearEffectDurationNanos: Long = (0.3 * 1e9).toLong
 
   private val hudTexts = Seq(scoreText, highScoreText, levelText, linesText, nextPieceLabel)
 
@@ -248,6 +249,38 @@ class GameView {
     }
   }
 
+  private def renderLineClearHighlights(rows: Seq[Int], startedAt: Long, now: Long): Unit = {
+    if (rows.nonEmpty && startedAt > 0L) {
+      val elapsed = now - startedAt
+      if (elapsed >= 0L && elapsed < lineClearEffectDurationNanos) {
+        val progress = math.min(1.0, math.max(0.0, elapsed.toDouble / lineClearEffectDurationNanos))
+        val baseOpacity = if (isDarkMode) 0.75 else 0.55
+        val opacity = baseOpacity * (1.0 - progress)
+        if (opacity > 0.01) {
+          val outerColor =
+            if (isDarkMode) Color.rgb(255, 255, 255, opacity * 0.45)
+            else Color.rgb(255, 200, 120, opacity * 0.45)
+          val innerColor =
+            if (isDarkMode) Color.rgb(255, 255, 255, opacity)
+            else Color.rgb(255, 170, 30, opacity)
+
+          val inset = BlockSize * 0.12 * progress
+          val width = canvas.width.value - inset * 2
+
+          rows.foreach { row =>
+            if (row >= 0 && row < GridHeight) {
+              val y = row * BlockSize
+              gc.fill = outerColor
+              gc.fillRect(0, y, canvas.width.value, BlockSize)
+              gc.fill = innerColor
+              gc.fillRect(inset, y + 2, math.max(0.0, width), BlockSize - 4)
+            }
+          }
+        }
+      }
+    }
+  }
+
   private def renderNextPiece(piece: Piece): Unit = {
     val previewBackground = if (isDarkMode) Color.rgb(30, 30, 30) else Color.rgb(220, 220, 220)
     nextPieceGc.fill = previewBackground
@@ -281,9 +314,10 @@ class GameView {
     renderNextPiece(gameState.nextPiece)
   }
 
-  def render(gameState: GameState): Unit = {
+  def render(gameState: GameState, nowNanos: Long): Unit = {
     renderGrid()
     renderBoard(gameState.getGrid)
+    renderLineClearHighlights(gameState.lastClearedRows, gameState.lastLineClearTimestamp, nowNanos)
 
     if (!gameState.isGameOver) {
       val piece = gameState.currentPiece
@@ -336,3 +370,4 @@ class GameView {
     refreshStartingLevelControls(clamped)
   }
 }
+

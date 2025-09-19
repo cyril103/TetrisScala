@@ -20,6 +20,8 @@ class GameState(config: GameConfig = ConfigStorage.load()) {
   var isGameOver: Boolean = false
   var isPaused: Boolean = false
   var highScore: Long = HighScoreStorage.load()
+  var lastClearedRows: Seq[Int] = Seq.empty
+  var lastLineClearTimestamp: Long = 0L
 
   // The grid of landed blocks. A 2D vector of optional colors.
   private var grid: Vector[Vector[Option[Color]]] = Vector.fill(GridHeight, GridWidth)(None)
@@ -46,15 +48,16 @@ class GameState(config: GameConfig = ConfigStorage.load()) {
     }
   }
 
-  private def clearLines(): Int = {
-    val (fullRows, nonFullRows) = grid.partition(row => row.forall(_.isDefined))
-    val clearedCount = fullRows.length
+  private def clearLines(): Seq[Int] = {
+    val rowsWithIndex = grid.zipWithIndex
+    val (fullRows, nonFullRows) = rowsWithIndex.partition { case (row, _) => row.forall(_.isDefined) }
+    val clearedIndices = fullRows.map(_._2)
 
-    if (clearedCount > 0) {
-      val newEmptyRows = Vector.fill(clearedCount, GridWidth)(None)
-      grid = newEmptyRows ++ nonFullRows
+    if (clearedIndices.nonEmpty) {
+      val newEmptyRows = Vector.fill(clearedIndices.length, GridWidth)(None)
+      grid = newEmptyRows ++ nonFullRows.map(_._1)
     }
-    clearedCount
+    clearedIndices
   }
 
   private def updateHighScore(): Unit = {
@@ -95,9 +98,11 @@ class GameState(config: GameConfig = ConfigStorage.load()) {
         currentPiece = movedDown
       } else {
         lockPiece()
-        val clearedCount = clearLines()
-        if (clearedCount > 0) {
-          updateScore(clearedCount)
+        val clearedRows = clearLines()
+        if (clearedRows.nonEmpty) {
+          updateScore(clearedRows.length)
+          lastClearedRows = clearedRows
+          lastLineClearTimestamp = System.nanoTime()
         }
         spawnNewPiece()
       }
@@ -155,6 +160,8 @@ class GameState(config: GameConfig = ConfigStorage.load()) {
     linesCleared = 0
     isGameOver = false
     isPaused = false
+    lastClearedRows = Seq.empty
+    lastLineClearTimestamp = 0L
     randomBag = new RandomBag()
     currentPiece = Piece(Point(GridWidth / 2, 1), randomBag.nextShape(), 0)
     nextPiece = Piece(Point(0, 0), randomBag.nextShape(), 0)

@@ -45,10 +45,11 @@ object Main extends JFXApp3 {
         gameState.highScore = 0L
       }
       gameState.restart()
-      lastUpdateTime = System.nanoTime()
+      val now = System.nanoTime()
+      lastUpdateTime = now
       isRunning = true
       gameView.updateHud(gameState)
-      gameView.render(gameState)
+      gameView.render(gameState, now)
     }
 
     val rootPane = new BorderPane {
@@ -72,9 +73,10 @@ object Main extends JFXApp3 {
       }
       gameView.setStartingLevel(clamped)
       gameState.updateStartingLevel(clamped)
-      lastUpdateTime = System.nanoTime()
+      val now = System.nanoTime()
+      lastUpdateTime = now
       gameView.updateHud(gameState)
-      gameView.render(gameState)
+      gameView.render(gameState, now)
     }
 
     gameView.onVolumeChanged = { volume =>
@@ -127,7 +129,7 @@ object Main extends JFXApp3 {
         lastUpdateTime = now
       }
 
-      gameView.render(gameState)
+      gameView.render(gameState, now)
 
       if (gameState.isGameOver) {
         isRunning = false
