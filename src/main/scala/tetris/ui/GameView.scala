@@ -20,6 +20,7 @@ class GameView {
   var onResetHighScoreToggleChanged: Boolean => Unit = _ => ()
   var onResetHighScoreRequested: () => Unit = () => ()
   var onStartGameRequested: () => Unit = () => ()
+  var onReturnToMenuRequested: () => Unit = () => ()
 
   val canvas = new Canvas(GridWidth * BlockSize, GridHeight * BlockSize)
   canvas.focusTraversable = false
@@ -95,6 +96,11 @@ class GameView {
     focusTraversable = false
   }
 
+  private val returnToMenuButton = new Button("Menu principal") {
+    style = "-fx-font-size: 16px;"
+    focusTraversable = false
+  }
+
   private val resetHighScoreButton = new Button("Reset High Score now") {
     style = "-fx-font-size: 16px;"
     focusTraversable = false
@@ -102,6 +108,7 @@ class GameView {
 
   private val optionsBox = new VBox(6,
     startGameButton,
+    returnToMenuButton,
     volumeLabel,
     volumeSlider,
     darkModeCheck,
@@ -171,6 +178,7 @@ class GameView {
   }
 
   startGameButton.onAction = _ => onStartGameRequested()
+  returnToMenuButton.onAction = _ => onReturnToMenuRequested()
   resetHighScoreButton.onAction = _ => onResetHighScoreRequested()
 
   private var boardBackgroundColor: Color = Color.Black
@@ -323,6 +331,10 @@ class GameView {
     val clampedDurationMs = math.max(0.0, durationMs)
     lineClearEffectDurationNanos = (clampedDurationMs * 1e6).toLong
     lineClearEffectBaseOpacity = math.max(0.0, math.min(1.0, opacity))
+  }
+
+  def requestGameFocus(): Unit = {
+    canvas.requestFocus()
   }
 
   def render(gameState: GameState, nowNanos: Long): Unit = {
