@@ -4,6 +4,7 @@ import scalafx.application.JFXApp3
 import scalafx.scene.Scene
 import scalafx.animation.AnimationTimer
 import tetris.ui.{GameView, StartScreenView}
+import tetris.audio.MusicManager
 import scalafx.scene.layout.BorderPane
 import tetris.core.{GameState, ConfigStorage, HighScoreStorage, StatsStorage, LastStats}
 import tetris.input.InputHandler
@@ -27,6 +28,7 @@ object Main extends JFXApp3 {
 
     val gameView = new GameView()
     val startScreen = new StartScreenView()
+    val musicManager = new MusicManager("/audio/background.wav")
 
     def applyConfigToViews(): Unit = {
       gameView.setStartingLevel(config.startingLevel)
@@ -40,9 +42,11 @@ object Main extends JFXApp3 {
       startScreen.setDarkMode(config.darkMode)
       startScreen.setResetHighScore(config.resetHighScoreOnStart)
       startScreen.updateTheme(config.darkMode)
+      musicManager.setVolume(config.volume)
     }
 
     applyConfigToViews()
+    if (musicManager.isAvailable) musicManager.play()
 
     val gameState = new GameState(config)
 
@@ -61,6 +65,7 @@ object Main extends JFXApp3 {
     stage = new JFXApp3.PrimaryStage {
       title = "TetrisScala"
       scene = mainScene
+      onCloseRequest = _ => musicManager.stop()
     }
 
     def showStartMenu(): Unit = {
@@ -87,6 +92,7 @@ object Main extends JFXApp3 {
       lastUpdateTime = now
       isRunning = true
       gameView.updateHud(gameState)
+      startScreen.updateStats(gameState.highScore, lastStats.score, lastStats.lines)
       gameView.render(gameState, now)
     }
 
@@ -114,6 +120,7 @@ object Main extends JFXApp3 {
         ConfigStorage.save(config)
       }
       gameView.setVolume(clamped)
+      musicManager.setVolume(clamped)
       startScreen.setVolume(clamped)
     }
 
@@ -193,3 +200,4 @@ object Main extends JFXApp3 {
     timer.start()
   }
 }
+
