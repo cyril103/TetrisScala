@@ -28,6 +28,34 @@ class GameStateSpec extends AnyFunSuite with Matchers {
     field.set(state, grid)
   }
 
+  test("I piece rotates in place when adjacent to a stack") {
+    withTempHighScore() {
+      val state = new GameState(GameConfig())
+      val stackColor = Color.Gray
+      val occupiedRows = Set(3, 4, 6)
+      val gridWithStack = Vector.tabulate(GridHeight) { y =>
+        Vector.tabulate(GridWidth) { x =>
+          if (x == GridWidth - 1 && occupiedRows.contains(y)) Some(stackColor) else None
+        }
+      }
+
+      setGrid(state, gridWithStack)
+
+      val anchor = Point(GridWidth - 2, 5)
+      state.currentPiece = Piece(anchor, Tetromino.I, rotation = 0)
+
+      state.rotateClockwise()
+
+      state.currentPiece.position shouldEqual anchor
+      state.currentPiece.blocks.toSet shouldEqual Set(
+        Point(anchor.x, anchor.y - 2),
+        Point(anchor.x, anchor.y - 1),
+        Point(anchor.x, anchor.y),
+        Point(anchor.x, anchor.y + 1)
+      )
+    }
+  }
+
   test("update moves the active piece down by one row when unobstructed") {
     withTempHighScore() {
       val state = new GameState(GameConfig())

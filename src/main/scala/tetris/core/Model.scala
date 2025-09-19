@@ -16,10 +16,10 @@ case class Piece(position: Point, shape: Tetromino, rotation: Int) {
 // Enum for the 7 tetromino shapes, their colors, and rotation patterns
 enum Tetromino(val color: Color, val rotations: Vector[Vector[Point]]) {
   case I extends Tetromino(Color.Cyan, Vector(
-    Vector(Point(-1, 0), Point(0, 0), Point(1, 0), Point(2, 0)),
-    Vector(Point(1, -1), Point(1, 0), Point(1, 1), Point(1, 2)),
-    Vector(Point(-1, 1), Point(0, 1), Point(1, 1), Point(2, 1)),
-    Vector(Point(0, -1), Point(0, 0), Point(0, 1), Point(0, 2))
+    Vector(Point(-2, 0), Point(-1, 0), Point(0, 0), Point(1, 0)),
+    Vector(Point(0, -2), Point(0, -1), Point(0, 0), Point(0, 1)),
+    Vector(Point(-2, 0), Point(-1, 0), Point(0, 0), Point(1, 0)),
+    Vector(Point(0, -2), Point(0, -1), Point(0, 0), Point(0, 1))
   ))
   case O extends Tetromino(Color.Yellow, Vector(
     Vector(Point(0, 0), Point(1, 0), Point(0, 1), Point(1, 1)),
