@@ -32,11 +32,20 @@ class ConfigStorageSpec extends AnyFunSuite with Matchers {
 volume=75
 darkMode=false
 resetHighScoreOnStart=true
+lineClearEffectDurationMs=450.5
+lineClearEffectOpacity=0.6
 """
       Files.writeString(path, content, StandardCharsets.UTF_8)
 
       ConfigStorage.withCustomPath(path) {
-        ConfigStorage.load() shouldEqual GameConfig(startingLevel = 4, volume = 75, darkMode = false, resetHighScoreOnStart = true)
+        ConfigStorage.load() shouldEqual GameConfig(
+          startingLevel = 4,
+          volume = 75,
+          darkMode = false,
+          resetHighScoreOnStart = true,
+          lineClearEffectDurationMs = 450.5,
+          lineClearEffectOpacity = 0.6
+        )
       }
     }
   }
@@ -47,11 +56,13 @@ resetHighScoreOnStart=true
 volume=500
 darkMode=maybe
 resetHighScoreOnStart=perhaps
+lineClearEffectDurationMs=-100
+lineClearEffectOpacity=5
 """
       Files.writeString(path, content, StandardCharsets.UTF_8)
 
       ConfigStorage.withCustomPath(path) {
-        ConfigStorage.load() shouldEqual GameConfig(volume = 100)
+        ConfigStorage.load() shouldEqual GameConfig(lineClearEffectDurationMs = 50.0, lineClearEffectOpacity = 1.0)
       }
     }
   }
@@ -59,7 +70,14 @@ resetHighScoreOnStart=perhaps
   test("save writes the configuration to disk") {
     withTempPath { path =>
       ConfigStorage.withCustomPath(path) {
-        val config = GameConfig(startingLevel = 7, volume = 60, darkMode = false, resetHighScoreOnStart = true)
+        val config = GameConfig(
+          startingLevel = 7,
+          volume = 60,
+          darkMode = false,
+          resetHighScoreOnStart = true,
+          lineClearEffectDurationMs = 512.25,
+          lineClearEffectOpacity = 0.68
+        )
         ConfigStorage.save(config)
 
         val raw = Files.readString(path, StandardCharsets.UTF_8)
@@ -67,6 +85,8 @@ resetHighScoreOnStart=perhaps
         raw.contains("volume=60") shouldBe true
         raw.contains("darkMode=false") shouldBe true
         raw.contains("resetHighScoreOnStart=true") shouldBe true
+        raw.contains("lineClearEffectDurationMs=512.25") shouldBe true
+        raw.contains("lineClearEffectOpacity=0.68") shouldBe true
       }
     }
   }

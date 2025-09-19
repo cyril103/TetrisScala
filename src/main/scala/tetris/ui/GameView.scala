@@ -176,7 +176,9 @@ class GameView {
   private var boardBackgroundColor: Color = Color.Black
   private var boardGridColor: Color = Color.rgb(50, 50, 50)
   private var isDarkMode: Boolean = true
-  private val lineClearEffectDurationNanos: Long = (0.3 * 1e9).toLong
+  private var lineClearEffectDurationNanos: Long = (0.3 * 1e9).toLong
+  private var lineClearEffectBaseOpacity: Double = 0.75
+  private val lightModeOpacityFactor = 0.7333333333333333
 
   private val hudTexts = Seq(scoreText, highScoreText, levelText, linesText, nextPieceLabel)
 
@@ -250,11 +252,14 @@ class GameView {
   }
 
   private def renderLineClearHighlights(rows: Seq[Int], startedAt: Long, now: Long): Unit = {
-    if (rows.nonEmpty && startedAt > 0L) {
+    if (rows.nonEmpty && startedAt > 0L && lineClearEffectDurationNanos > 0L) {
       val elapsed = now - startedAt
       if (elapsed >= 0L && elapsed < lineClearEffectDurationNanos) {
         val progress = math.min(1.0, math.max(0.0, elapsed.toDouble / lineClearEffectDurationNanos))
-        val baseOpacity = if (isDarkMode) 0.75 else 0.55
+        val baseOpacity = {
+          if (isDarkMode) lineClearEffectBaseOpacity
+          else math.min(1.0, lineClearEffectBaseOpacity * lightModeOpacityFactor)
+        }
         val opacity = baseOpacity * (1.0 - progress)
         if (opacity > 0.01) {
           val outerColor =
@@ -312,6 +317,12 @@ class GameView {
     levelText.text = s"Level: ${gameState.level}"
     linesText.text = s"Lines: ${gameState.linesCleared}"
     renderNextPiece(gameState.nextPiece)
+  }
+
+  def setLineClearEffect(durationMs: Double, opacity: Double): Unit = {
+    val clampedDurationMs = math.max(0.0, durationMs)
+    lineClearEffectDurationNanos = (clampedDurationMs * 1e6).toLong
+    lineClearEffectBaseOpacity = math.max(0.0, math.min(1.0, opacity))
   }
 
   def render(gameState: GameState, nowNanos: Long): Unit = {

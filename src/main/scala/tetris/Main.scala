@@ -33,6 +33,7 @@ object Main extends JFXApp3 {
     gameView.setVolume(config.volume)
     gameView.setDarkMode(config.darkMode)
     gameView.setResetHighScoreOnStart(config.resetHighScoreOnStart)
+    gameView.setLineClearEffect(config.lineClearEffectDurationMs, config.lineClearEffectOpacity)
 
     val gameState = new GameState(config)
 
